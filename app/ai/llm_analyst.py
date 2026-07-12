@@ -1,75 +1,94 @@
 from google import genai
-# from google.genai import errors
+from google.genai import errors
+from dotenv import load_dotenv
 import os
 import json
-from dotenv import load_dotenv
 
 load_dotenv()
 
 
-def analyze_attack_log(technique: str, severity: str, source_info: str, target_info: str) -> dict:
-    # Khởi tạo client chính thức nhận diện trọn vẹn định dạng AQ...
-    api_key=os.getenv("GEMINI_API_KEY")       
+# Khởi tạo client một lần
+api_key = os.getenv("GEMINI_API_KEY")
+MODEL_NAME = "models/gemini-3.5-flash"
 
-    if not api_key:
-        raise ValueError("Không tìm thấy GEMINI_API_KEY trong file .env")
+if not api_key:
+    raise RuntimeError("Không tìm thấy GEMINI_API_KEY trong file .env")
 
-    client = genai.Client(
-        api_key=api_key
-    )
-    
+# Khởi tạo Gemini Client
+client = genai.Client(api_key=api_key)
+
+
+def analyze_attack_log(
+    technique: str,
+    severity: str,
+    source_info: str,
+    target_info: str,
+) -> dict:
+
     prompt = f"""
-        Bạn là một chuyên gia phân tích an ninh mạng SOC cấp cao.
+Bạn là một chuyên gia SOC cấp cao.
 
-        Hãy phân tích sự cố sau:
+Phân tích sự cố sau:
 
-        Hành vi: {technique}
-        Mức độ: {severity}
-        Nguồn: {source_info}
-        Đích: {target_info}
+Hành vi: {technique}
+Mức độ: {severity}
+Nguồn: {source_info}
+Đích: {target_info}
 
-        Trả lời DUY NHẤT bằng JSON
+Chỉ trả về JSON đúng định dạng:
 
-        Định dạng: 
-        
-        {{
-            "explanation": "...",
-            "mitigation": "..."
-        }}
+{{
+    "explanation": "...",
+    "mitigation": "..."
+}}
 
-        Không được thêm markdown.
-        Không được thêm ```json.
-        Không được giải thích ngoài JSON.
-    """    
+Không markdown.
+Không ```json.
+Không giải thích thêm.
+"""
 
     try:
-        # Gọi trực tiếp qua SDK mới với model flash tiêu chuẩn
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model=MODEL_NAME,
             contents=prompt,
         )
-        
+
         raw_text = response.text.strip()
 
-        # Phòng trường hợp Gemini vẫn trả về ```json
-        raw_text = raw_text.replace("```json", "")
-        raw_text = raw_text.replace("```", "").strip()
+        if raw_text.startswith("```"):
+            raw_text = (
+                raw_text.replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
 
         data = json.loads(raw_text)
 
         return {
             "status": "success",
-            "explanation": data["explanation"],
-            "mitigation": data["mitigation"],
-            "cached": False
+            "explanation": data.get("explanation", ""),
+            "mitigation": data.get("mitigation", ""),
+            "cached": False,
         }
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
 
+    except errors.ClientError as e:
+        print(f"Gemini Client Error: {e}")
         return {
             "status": "error",
             "message": str(e),
-            "cached": False
+            "cached": False,
+        }
+
+    except json.JSONDecodeError:
+        return {
+            "status": "error",
+            "message": f"Gemini trả về không phải JSON:\n{raw_text}",
+            "cached": False,
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "cached": False,
         }
