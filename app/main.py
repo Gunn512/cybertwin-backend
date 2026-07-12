@@ -7,6 +7,7 @@ from app.models import Device, SecurityAlert, AiInsight
 from app.ai.llm_analyst import analyze_attack_log
 import uuid
 from app.parser.correlation_engine import correlate_alerts
+from pydantic import BaseModel
 
 # Khởi tạo Database
 init_db()
@@ -163,3 +164,5 @@ def get_attack_chains(db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi gom cụm sự kiện: {str(e)}")
+
+        
