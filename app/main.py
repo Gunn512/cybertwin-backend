@@ -6,6 +6,9 @@ from app.parser.log_processor import process_raw_log
 from app.ai.llm_analyst import analyze_attack_log
 from pydantic import BaseModel
 import uuid
+import json
+import os
+from app.simulator.attack_simulator import AttackSimulator
 
 init_db()
 
@@ -108,3 +111,44 @@ def trigger_ai_explanation(payload: AIExplainRequest, db: Session = Depends(get_
     db.commit()
 
     return {"status": "success", "explanation": f"{ai_result['explanation']}\n\n🛡️ KHUYẾN NGHỊ KHẮC PHỤC KHẨN CẤP:\n{ai_result['mitigation']}"}
+
+# Test OK 18h 13/07/2026
+
+
+# --- CÁC ENDPOINT ĐIỀU KHIỂN BỘ GIẢ LẬP (SIMULATOR) ---
+
+@app.post("/api/v1/simulator/step")
+def run_simulator_step(scenario_name: str, step: int, db: Session = Depends(get_db)):
+    """API kích hoạt 1 bước của kịch bản tấn công"""
+    simulator = AttackSimulator(db)
+    
+    try:
+        # Lấy tổng số bước để Frontend biết tiến trình (Ví dụ: Bước 1/3)
+        total_steps = simulator.get_total_steps(scenario_name)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+        
+    # Chạy đúng bước được yêu cầu
+    result = simulator.run_step(scenario_name, step)
+    
+    if result["status"] == "error":
+         raise HTTPException(status_code=400, detail=result["message"])
+
+    return {
+        "status": "success", 
+        "message": f"Chạy thành công bước {step}/{total_steps} của {scenario_name}",
+        "total_steps": total_steps
+    }
+
+@app.post("/api/v1/simulator/reset")
+def reset_simulator(db: Session = Depends(get_db)):
+    """API dọn dẹp sạch sẽ Database để Demo lại từ đầu"""
+    try:
+        db.query(AiInsight).delete()
+        db.query(SecurityAlert).delete()
+        db.query(Device).delete()
+        db.commit()
+        return {"status": "success", "message": "Đã làm sạch hệ thống."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))    

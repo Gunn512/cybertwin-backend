@@ -9,7 +9,13 @@ load_dotenv()
 
 # Khởi tạo client một lần
 api_key = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = "models/gemini-3.5-flash"
+# MODEL_NAME = "models/gemini-3.5-flash"
+# MODEL_NAME = "models/gemini-2.5-flash"
+# MODEL_NAME = "gemini-2.5-flash"
+# MODEL_NAME = "gemini-flash-latest"
+MODEL_NAME = "models/gemini-flash-lite-latest"
+# MODEL_NAME = "models/gemini-3.1-flash-lite"
+
 
 if not api_key:
     raise RuntimeError("Không tìm thấy GEMINI_API_KEY trong file .env")
