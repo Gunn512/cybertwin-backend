@@ -9,12 +9,17 @@ load_dotenv()
 
 # Khởi tạo client một lần
 api_key = os.getenv("GEMINI_API_KEY")
-# MODEL_NAME = "models/gemini-3.5-flash"
-# MODEL_NAME = "models/gemini-2.5-flash"
-# MODEL_NAME = "gemini-2.5-flash"
-# MODEL_NAME = "gemini-flash-latest"
-MODEL_NAME = "models/gemini-flash-lite-latest"
-# MODEL_NAME = "models/gemini-3.1-flash-lite"
+# # MODEL_NAME = "models/gemini-3.5-flash"
+# # MODEL_NAME = "models/gemini-2.5-flash"
+# # MODEL_NAME = "gemini-2.5-flash"
+# # MODEL_NAME = "gemini-flash-latest"
+# MODEL_NAME = "models/gemini-flash-lite-latest"
+# # MODEL_NAME = "models/gemini-3.1-flash-lite"
+MODELS = [
+    "models/gemini-flash-lite-latest",
+    "models/gemini-3.1-flash-lite",
+    "models/gemini-3.5-flash",
+]
 
 
 if not api_key:
@@ -53,48 +58,89 @@ Không ```json.
 Không giải thích thêm.
 """
 
-    try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt,
-        )
+    # try:
+    #     response = client.models.generate_content(
+    #         model=MODEL_NAME,
+    #         contents=prompt,
+    #     )
 
-        raw_text = response.text.strip()
+    #     raw_text = response.text.strip()
 
-        if raw_text.startswith("```"):
-            raw_text = (
-                raw_text.replace("```json", "")
-                .replace("```", "")
-                .strip()
+    #     if raw_text.startswith("```"):
+    #         raw_text = (
+    #             raw_text.replace("```json", "")
+    #             .replace("```", "")
+    #             .strip()
+    #         )
+
+    #     data = json.loads(raw_text)
+
+    #     return {
+    #         "status": "success",
+    #         "explanation": data.get("explanation", ""),
+    #         "mitigation": data.get("mitigation", ""),
+    #         "cached": False,
+    #     }
+
+    # except errors.ClientError as e:
+    #     print(f"Gemini Client Error: {e}")
+    #     return {
+    #         "status": "error",
+    #         "message": str(e),
+    #         "cached": False,
+    #     }
+
+    # except json.JSONDecodeError:
+    #     return {
+    #         "status": "error",
+    #         "message": f"Gemini trả về không phải JSON:\n{raw_text}",
+    #         "cached": False,
+    #     }
+
+    # except Exception as e:
+    #     return {
+    #         "status": "error",
+    #         "message": str(e),
+    #         "cached": False,
+    #     }
+
+    last_error = None
+
+    for model in MODELS:
+        try:
+            print(f"Đang thử model: {model}")
+
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
             )
 
-        data = json.loads(raw_text)
+            raw_text = response.text.strip()
 
-        return {
-            "status": "success",
-            "explanation": data.get("explanation", ""),
-            "mitigation": data.get("mitigation", ""),
-            "cached": False,
-        }
+            if raw_text.startswith("```"):
+                raw_text = (
+                    raw_text.replace("```json", "")
+                    .replace("```", "")
+                    .strip()
+                )
 
-    except errors.ClientError as e:
-        print(f"Gemini Client Error: {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "cached": False,
-        }
+            data = json.loads(raw_text)
 
-    except json.JSONDecodeError:
-        return {
-            "status": "error",
-            "message": f"Gemini trả về không phải JSON:\n{raw_text}",
-            "cached": False,
-        }
+            print(f"Thành công với model: {model}")
 
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "cached": False,
-        }
+            return {
+                "status": "success",
+                "explanation": data.get("explanation", ""),
+                "mitigation": data.get("mitigation", ""),
+                "cached": False,
+            }
+
+        except Exception as e:
+            print(f"Lỗi với {model}: {e}")
+            last_error = e
+
+    return {
+        "status": "error",
+        "message": str(last_error),
+        "cached": False,
+    }
