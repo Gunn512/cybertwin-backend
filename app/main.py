@@ -10,6 +10,7 @@ import json
 import os
 from app.simulator.attack_simulator import AttackSimulator
 
+
 init_db()
 
 app = FastAPI(title="CyberTwin API", version="1.0")
@@ -149,4 +150,22 @@ def reset_simulator(db: Session = Depends(get_db)):
         return {"status": "success", "message": "Đã làm sạch hệ thống."}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))    
+        raise HTTPException(status_code=500, detail=str(e))  
+
+# Test OK 14/07/26
+
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+# LƯỚI AN TOÀN TOÀN CỤC (GLOBAL EXCEPTION HANDLER)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Bắt toàn bộ lỗi sập hệ thống (Crash) và trả về định dạng an toàn cho Frontend"""
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": f"Hệ thống lõi đang tạm gián đoạn. Lỗi chi tiết: {str(exc)}",
+            "type": "Critical"
+        }
+    )
