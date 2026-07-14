@@ -9,12 +9,6 @@ load_dotenv()
 
 # Khởi tạo client một lần
 api_key = os.getenv("GEMINI_API_KEY")
-# # MODEL_NAME = "models/gemini-3.5-flash"
-# # MODEL_NAME = "models/gemini-2.5-flash"
-# # MODEL_NAME = "gemini-2.5-flash"
-# # MODEL_NAME = "gemini-flash-latest"
-# MODEL_NAME = "models/gemini-flash-lite-latest"
-# # MODEL_NAME = "models/gemini-3.1-flash-lite"
 MODELS = [
     "models/gemini-flash-lite-latest",
     "models/gemini-3.1-flash-lite",
@@ -57,52 +51,6 @@ Không markdown.
 Không ```json.
 Không giải thích thêm.
 """
-
-    # try:
-    #     response = client.models.generate_content(
-    #         model=MODEL_NAME,
-    #         contents=prompt,
-    #     )
-
-    #     raw_text = response.text.strip()
-
-    #     if raw_text.startswith("```"):
-    #         raw_text = (
-    #             raw_text.replace("```json", "")
-    #             .replace("```", "")
-    #             .strip()
-    #         )
-
-    #     data = json.loads(raw_text)
-
-    #     return {
-    #         "status": "success",
-    #         "explanation": data.get("explanation", ""),
-    #         "mitigation": data.get("mitigation", ""),
-    #         "cached": False,
-    #     }
-
-    # except errors.ClientError as e:
-    #     print(f"Gemini Client Error: {e}")
-    #     return {
-    #         "status": "error",
-    #         "message": str(e),
-    #         "cached": False,
-    #     }
-
-    # except json.JSONDecodeError:
-    #     return {
-    #         "status": "error",
-    #         "message": f"Gemini trả về không phải JSON:\n{raw_text}",
-    #         "cached": False,
-    #     }
-
-    # except Exception as e:
-    #     return {
-    #         "status": "error",
-    #         "message": str(e),
-    #         "cached": False,
-    #     }
 
     last_error = None
 

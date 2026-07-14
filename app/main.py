@@ -112,8 +112,6 @@ def trigger_ai_explanation(payload: AIExplainRequest, db: Session = Depends(get_
 
     return {"status": "success", "explanation": f"{ai_result['explanation']}\n\n🛡️ KHUYẾN NGHỊ KHẮC PHỤC KHẨN CẤP:\n{ai_result['mitigation']}"}
 
-# Test OK 18h 13/07/2026
-
 
 # --- CÁC ENDPOINT ĐIỀU KHIỂN BỘ GIẢ LẬP (SIMULATOR) ---
 
