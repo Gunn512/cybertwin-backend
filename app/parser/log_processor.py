@@ -1,3 +1,4 @@
+# Gunn Nguyen
 from sqlalchemy.orm import Session
 from app.models import Device, SecurityAlert
 from datetime import datetime

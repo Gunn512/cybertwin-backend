@@ -1,3 +1,4 @@
+# Gunn Nguyen
 import time
 from sqlalchemy.orm import Session
 from app.parser.log_processor import process_raw_log
@@ -18,7 +19,6 @@ class AttackSimulator:
             
             print(f"\n⏳ Đang thực thi Bước {step}: {technique}...")
             
-            # Đẩy log vào pipeline lõi
             result = process_raw_log(self.db, log)
             
             if result["status"] == "error":
@@ -27,8 +27,6 @@ class AttackSimulator:
                 
             print(f"✅ Bơm log thành công!")
             print(f"   Nguồn: {log.get('source_ip')} -> Đích: {log.get('target_ip')}")
-            
-            # Tạm dừng trước khi bắn bước tiếp theo
             time.sleep(delay)
             
         print("\n🎉 ĐÃ HOÀN THÀNH TOÀN BỘ KỊCH BẢN!\n")
@@ -41,6 +39,8 @@ class AttackSimulator:
             return {"status": "error", "message": f"Bước {step_index} không tồn tại."}
             
         log_data = scenario_data[step_index - 1]
+        
+        # Chỉ gọi hàm xử lý log vào bảng security_alerts (An toàn, không xóa thiết bị)
         return process_raw_log(self.db, log_data)
         
     def get_total_steps(self, scenario_name: str):

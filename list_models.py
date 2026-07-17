@@ -1,3 +1,4 @@
+# Gunn Nguyen
 from google import genai
 import os
 from dotenv import load_dotenv
